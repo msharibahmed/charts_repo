@@ -1,0 +1,164 @@
+//REMEMBER TO ADD FL CHART PACKAGE IN PUBSPEC.YAML
+
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+
+class DepartmentChart extends StatefulWidget {
+  @override
+  _DepartmentChartState createState() => _DepartmentChartState();
+}
+
+class _DepartmentChartState extends State<DepartmentChart> {
+
+  final List<double> departmentData = [23.5, 454, 4663, 10000.34, 34, 1235.44]; //DATA FOR CHART
+  int touchedIndex;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 350,
+      margin: const EdgeInsets.all(15.0),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+          color: Color(0xff81e5cd),
+          borderRadius: BorderRadius.all(Radius.circular(15))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text(
+            'Cost Analysis',
+            style: TextStyle(color:Colors.black,fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const Divider(
+            color: Colors.black,
+            endIndent: 210,
+          ),
+          Text('Department Wise',
+              style: TextStyle(color:Colors.black,fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(
+            height: 20,
+          ),
+          Expanded(
+              child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: BarChart(mainBarData()),
+          ))
+        ],
+      ),
+    );
+  }
+
+  BarChartGroupData _buildBar(int x, double y, {bool isTouched = false}) {
+    return BarChartGroupData(x: x, barRods: [
+      BarChartRodData(
+          y: isTouched ? y + 500 : y,
+          color: isTouched ? Colors.amber : Colors.white,
+          width:20,
+          backDrawRodData: BackgroundBarChartRodData(
+            color: Color(0xff72d8bf),
+            show: true,
+            y: departmentData.reduce((current, next) =>current>next?current:next)+1000,
+          ))
+    ]);
+  }
+
+  List<BarChartGroupData> _buildAllBars() {
+    return List.generate(
+        departmentData.length,
+        (index) => _buildBar(index, departmentData[index],
+            isTouched: index == touchedIndex));
+  }
+
+  BarChartData mainBarData() {
+    return BarChartData(
+        barTouchData: _buildBarTouchData(),
+        titlesData: _buildAxes(),
+        borderData: FlBorderData(show: false),
+        barGroups: _buildAllBars());
+  }
+
+  BarTouchData _buildBarTouchData() {
+    return BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+          tooltipBgColor: Colors.greenAccent,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            String department;
+            switch (group.x.toInt()) {
+              case 0:
+                department = 'Vehicle Dynamics';
+                break;
+              case 1:
+                department = 'Power Train';
+                break;
+              case 2:
+                department = 'Brakes';
+                break;
+              case 3:
+                department = 'Chassis';
+                break;
+              case 4:
+                department = 'Electronics';
+                break;
+              case 5:
+                department = 'Miscellaneous';
+                break;
+            }
+            return BarTooltipItem(department + '\n' + (rod.y).toString(),
+                TextStyle(color: Colors.black,fontWeight: FontWeight.bold));
+          },
+        ),
+        touchCallback: (barTouchResponse) {
+          setState(() {
+            if (barTouchResponse.spot != null &&
+                barTouchResponse.touchInput is! FlPanEnd &&
+                barTouchResponse.touchInput is! FlLongPressEnd) {
+              touchedIndex = barTouchResponse.spot.touchedBarGroupIndex;
+            } else {
+              touchedIndex = -1;
+            }
+          });
+        });
+  }
+
+  FlTitlesData _buildAxes() {
+    return FlTitlesData(
+      //buildng x-axis
+      bottomTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 22,
+        textStyle: TextStyle(
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+        margin: 16,
+        getTitles: (value) {
+          switch (value.toInt()) {
+            case 0:
+              return 'Vehicle Dynamics';
+            case 1:
+              return 'Power Train';
+            case 2:
+              return 'Brakes';
+
+            case 3:
+              return 'Chassis';
+            case 4:
+              return 'Electronics';
+            case 5:
+              return 'Miscellaneous';
+            default:
+              return '';
+          }
+        },
+      ),
+
+      //buildng y-axis
+      leftTitles: SideTitles(
+          showTitles: false,
+
+          // reservedSize: 30,
+          textStyle: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+          margin: 8,
+          getTitles: (value) => value.toString()),
+    );
+  }
+}
